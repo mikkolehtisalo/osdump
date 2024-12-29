@@ -20,7 +20,7 @@ go install github.com/mikkolehtisalo/osdump@latest
 
 The configuration options:
 ```bash
-$ ./osdump -h
+$ ~/go/bin/osdump -h
 Usage of ./osdump:
   -base string
         opensearch base url (default "https://localhost:9200")
@@ -46,7 +46,7 @@ Usage of ./osdump:
 
 Example run:
 ```bash
-$ ./osdump -user admin -password mysecretpassword -size 1000
+$ ~/go/bin/osdump -user admin -password mysecretpassword -size 1000
 2024/12/29 14:26:11 INFO Starting to dump graylog_0
 2024/12/29 14:26:11 INFO Index graylog_0 has 272905 documents to dump
 2024/12/29 14:27:37 INFO Dumped 272905 records in 86 seconds, average speed 3159/second
