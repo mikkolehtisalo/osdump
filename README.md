@@ -13,7 +13,6 @@
 ## Installation
 
 ```bash
-$ apt install brotli libbrotli1 
 $ go install github.com/mikkolehtisalo/osdump@latest
 ```
 
@@ -33,8 +32,8 @@ Usage of ./osdump:
         target file for export (default "graylog_0.json")
   -index string
         opensearch index (default "graylog_0")
-  -loglevel string
-        level of logging (default "info")
+  -debug
+        debug logging (default false)
   -password string
         opensearch user (default "password")
   -quality int
@@ -48,16 +47,16 @@ Usage of ./osdump:
 Example run:
 ```bash
 $ ~/go/bin/osdump -user admin -password mysecretpassword -size 1000
-2024/12/29 14:26:11 INFO Starting to dump graylog_0
-2024/12/29 14:26:11 INFO Index graylog_0 has 272905 documents to dump
-2024/12/29 14:27:37 INFO Dumped 272905 records in 86 seconds, average speed 3159/second
-2024/12/29 14:27:37 INFO Finished dumping graylog_0
+2024/12/30 21:08:30 osdump.go:296: Starting to dump graylog_0
+2024/12/30 21:08:30 osdump.go:300: Index graylog_0 has 272905 documents to dump
+2024/12/30 21:09:53 osdump.go:311: Closed tasks channel
+2024/12/30 21:09:53 osdump.go:320: Dumped 272905 records in 82 seconds, average speed 3314/second
+2024/12/30 21:09:53 osdump.go:321: Finished dumping graylog_0
 ```
 
 ## Requirements
 
 * Go 1.22+
-* brotli shared libraries should be installed
 * Access to an OpenSearch instance
 
 ## Limitations
