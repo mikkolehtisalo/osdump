@@ -86,7 +86,7 @@ func get_config() *Configuration {
 	flag.IntVar(&config.Size, "size", 1000, "search window size")
 	flag.StringVar(&config.File, "file", "graylog_0.json", "target file for export")
 	flag.BoolVar(&config.Brotli, "brotli", false, "compress using brotli")
-	flag.IntVar(&config.Quality, "quality", 4, "brotli quality setting")
+	flag.IntVar(&config.Quality, "quality", 2, "brotli quality setting")
 	flag.BoolVar(&debug, "debug", false, "debug logging")
 	flag.Parse()
 	if strings.HasPrefix(config.Base, "https") {
