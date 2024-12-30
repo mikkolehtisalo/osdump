@@ -16,7 +16,7 @@ import (
 	"text/template"
 	"time"
 
-	cbrotli "github.com/google/brotli/go/cbrotli"
+	"github.com/andybalholm/brotli"
 	"github.com/valyala/fastjson"
 )
 
@@ -253,9 +253,9 @@ func consumer(ctx *Context, config *Configuration, wg *sync.WaitGroup) {
 	// Apparently only io.Writer seems to be common with these two writers
 	var out io.Writer
 	if config.Brotli {
-		opts := cbrotli.WriterOptions{}
+		opts := brotli.WriterOptions{}
 		opts.Quality = config.Quality
-		cout := cbrotli.NewWriter(w, opts)
+		cout := brotli.NewWriterOptions(w, opts)
 		out = cout
 		defer func() {
 			cout.Flush()
