@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -15,24 +16,22 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/charmbracelet/log"
 	cbrotli "github.com/google/brotli/go/cbrotli"
 	"github.com/valyala/fastjson"
 )
 
 // Holds the configuration
 type Configuration struct {
-	Base      string
-	User      string
-	Password  string
-	Tls       bool
-	Tls_ca    string
-	Index     string
-	Size      int
-	File      string
-	Brotli    bool
-	Quality   int
-	Log_level string
+	Base     string
+	User     string
+	Password string
+	Tls      bool
+	Tls_ca   string
+	Index    string
+	Size     int
+	File     string
+	Brotli   bool
+	Quality  int
 }
 
 // Holds the dump context
@@ -58,6 +57,9 @@ const query_template string = `{
 	]
 }`
 
+// Default setting for debug log
+var debug bool = false
+
 // Helper for checking errs
 func check(e error) {
 	if e != nil {
@@ -67,9 +69,9 @@ func check(e error) {
 
 // Helper for debug logging
 func debugf(format string, args ...interface{}) {
-	// Without this kind of check the sprintf will get called even though the final message might be discarded
-	if log.GetLevel() == log.DebugLevel {
-		debugf(format, args...)
+	// Without this the sprintf will get called even though the final message might be discarded
+	if debug {
+		log.Printf(format, args...)
 	}
 }
 
@@ -85,14 +87,10 @@ func get_config() *Configuration {
 	flag.StringVar(&config.File, "file", "graylog_0.json", "target file for export")
 	flag.BoolVar(&config.Brotli, "brotli", false, "compress using brotli")
 	flag.IntVar(&config.Quality, "quality", 4, "brotli quality setting")
-	flag.StringVar(&config.Log_level, "loglevel", "info", "level of logging")
+	flag.BoolVar(&debug, "debug", false, "debug logging")
 	flag.Parse()
 	if strings.HasPrefix(config.Base, "https") {
 		config.Tls = true
-	}
-	level, err := log.ParseLevel(config.Log_level)
-	if err == nil {
-		log.SetLevel(level)
 	}
 	debugf("Configuration: %+v", config)
 	return &config
@@ -193,7 +191,10 @@ func parse_search_results(input []byte, ctx *Context) [][]byte {
 	results := json.Get("hits").Get("hits").GetArray()
 	// If the array is empty, we probably just parsed everything already
 	if len(results) == 0 {
-		log.Debug("Did not get any results, bailing out")
+		if debug {
+			log.Println("Did not get any results, bailing out")
+		}
+
 		return [][]byte{}
 	}
 
@@ -226,11 +227,16 @@ func producer(ctx *Context, config *Configuration, wg *sync.WaitGroup) {
 			*ctx.Tasks <- r[x]
 		}
 		if len(r) == 0 {
-			log.Debug("Nothing more to produce, breaking the loop")
+			if debug {
+				log.Println("Nothing more to produce, breaking the loop")
+			}
 			break
 		}
 	}
-	log.Debug("Producer done")
+	if debug {
+		log.Println("Producer done")
+	}
+
 }
 
 // Reads results from a channel and writes them
@@ -270,10 +276,14 @@ func consumer(ctx *Context, config *Configuration, wg *sync.WaitGroup) {
 		out.Write(data)
 		out.Write(ln) // \n
 	}
-	log.Debug("Consumer done")
+	if debug {
+		log.Println("Consumer done")
+	}
+
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	config := get_config()
 	var ctx Context
 	ctx.Size = config.Size
@@ -283,11 +293,11 @@ func main() {
 	tasksChan := make(chan []byte, 100000)
 	ctx.Tasks = &tasksChan
 
-	log.Infof("Starting to dump %s", config.Index)
+	log.Printf("Starting to dump %s", config.Index)
 	start := time.Now()
 	// Check the count of documents
 	c := query_count_database(config, &ctx)
-	log.Infof("Index %s has %d documents to dump", config.Index, c)
+	log.Printf("Index %s has %d documents to dump", config.Index, c)
 	if c == 0 {
 		log.Fatal("Nothing to dump!")
 	}
@@ -298,7 +308,7 @@ func main() {
 	go func() {
 		pwg.Wait()
 		close(*ctx.Tasks)
-		log.Debug("Closed tasks channel")
+		log.Printf("Closed tasks channel")
 	}()
 	// Set up consumer
 	var cwg sync.WaitGroup
@@ -307,6 +317,6 @@ func main() {
 	cwg.Wait()
 	// Print statistics
 	elapsed := time.Since(start)
-	log.Infof("Dumped %d records in %d seconds, average speed %d/second", ctx.Counter, int(elapsed.Seconds()), int(float64(ctx.Counter)/elapsed.Seconds()))
-	log.Infof("Finished dumping %s", config.Index)
+	log.Printf("Dumped %d records in %d seconds, average speed %d/second", ctx.Counter, int(elapsed.Seconds()), int(float64(ctx.Counter)/elapsed.Seconds()))
+	log.Printf("Finished dumping %s", config.Index)
 }
