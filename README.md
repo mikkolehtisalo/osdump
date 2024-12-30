@@ -13,7 +13,8 @@
 ## Installation
 
 ```bash
-go install github.com/mikkolehtisalo/osdump@latest
+$ apt install brotli libbrotli1 
+$ go install github.com/mikkolehtisalo/osdump@latest
 ```
 
 ## Usage
@@ -56,6 +57,7 @@ $ ~/go/bin/osdump -user admin -password mysecretpassword -size 1000
 ## Requirements
 
 * Go 1.22+
+* brotli shared libraries should be installed
 * Access to an OpenSearch instance
 
 ## Limitations
