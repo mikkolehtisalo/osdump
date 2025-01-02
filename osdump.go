@@ -50,7 +50,8 @@ var ln = []byte{10}
 
 // Query template for search_after
 const query_template string = `{
-	"size": {{.Size}},{{if .After}}
+	"size": {{.Size}},
+	"query": {"bool": {"must": {"match_all": {}}}},{{if .After}}
 	"search_after": ["{{.After}}"],{{end}}
 	"sort": [
 	  { "_id": "asc" } 
@@ -170,7 +171,7 @@ func query_count_database(config *Configuration, ctx *Context) int {
 
 // Queries the opensearch for one window of data
 func query_search_database(config *Configuration, ctx *Context) []byte {
-	uri := fmt.Sprintf("%s/%s/_search", config.Base, config.Index)
+	uri := fmt.Sprintf("%s/%s/_search?request_cache=true", config.Base, config.Index)
 	buf := new(bytes.Buffer)
 	err := ctx.Template.Execute(buf, ctx)
 	check(err)
